@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/containernetworking/cni/pkg/skel"
-	"github.com/containernetworking/cni/pkg/types"
+	cnitypes "github.com/containernetworking/cni/pkg/types"
 	"github.com/containernetworking/cni/pkg/types/current"
 	"github.com/containernetworking/plugins/pkg/ip"
 	"github.com/containernetworking/plugins/pkg/ns"
@@ -19,39 +19,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+
+	"github.com/danielmellado/egress-router-cni/pkg/logging"
+	"github.com/danielmellado/egress-router-cni/pkg/types"
 )
 
 const (
 	IPv4InterfaceArpProxySysctlTemplate = "net.ipv4.conf.%s.proxy_arp"
 	DisableIPv6SysctlTemplate           = "net.ipv6.conf.%s.disable_ipv6"
 )
-
-type ClusterConf struct {
-	CloudProvider string `json:"cloudProvider"`
-}
-
-type NetConf struct {
-	types.NetConf
-
-	InterfaceType string            `json:"interfaceType"`
-	InterfaceArgs map[string]string `json:"interfaceArgs"`
-
-	IP       *IP           `json:"ip"`
-	PodIP    map[string]IP `json:"podIP"`
-	IPConfig *IPConfig     `json:"ipConfig"`
-}
-
-type IP struct {
-	Addresses    []string `json:"addresses"`
-	Gateway      string   `json:"gateway"`
-	Destinations []string `json:"destinations"`
-}
-
-type IPConfig struct {
-	Namespace string `json:"namespace"`
-	Name      string `json:"name"`
-	Overrides *IP    `json:"overrides"`
-}
 
 func loadNetConf(cluster *ClusterConf, bytes []byte) (*NetConf, error) {
 	conf := &NetConf{}
@@ -344,7 +320,7 @@ func macvlanCmdAdd(args *skel.CmdArgs) error {
 
 	result.DNS = n.DNS
 
-	return types.PrintResult(result, n.CNIVersion)
+	return cnitypes.PrintResult(result, n.CNIVersion)
 }
 
 func getMTUByName(ifName string) (int, error) {
